@@ -1,0 +1,52 @@
+---
+// src/pages/workspace/[workspaceId]/boards.astro
+
+// NOTA: Revisa que la ruta de importación sea correcta desde esta nueva ubicación.
+// Probablemente necesites dos puntos (../../) para subir dos niveles.
+import Layout from '../../../layouts/Layout.astro';
+import { allWorkspaces } from '../../../data/mock-workspace';
+
+// Esta función le dice a Astro qué páginas de workspaces debe crear
+export function getStaticPaths() {
+  return allWorkspaces.map(workspace => {
+    return {
+      params: { workspaceId: workspace.id }
+    };
+  });
+}
+
+// Obtenemos el ID del workspace desde la URL
+const { workspaceId } = Astro.params;
+
+// Buscamos el espacio de trabajo que corresponde a ese ID
+const currentWorkspace = allWorkspaces.find(ws => ws.id === workspaceId);
+
+// Si no se encuentra, redirigimos a una página de error
+if (!currentWorkspace) {
+  return Astro.redirect('/404');
+}
+---
+<Layout title={`Tableros de ${currentWorkspace.name}`}>
+  <main class="p-8">
+
+    <a href="/dashboard" class="text-blue-500 hover:underline mb-4 block">
+      &larr; Volver a todos los espacios de trabajo
+    </a>
+    
+    <h1 class="text-3xl font-bold mb-6">
+      Espacio de trabajo: {currentWorkspace.name}
+    </h1>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+      {currentWorkspace.boards.map(board => (
+        <a 
+          href={`/workspace/${workspaceId}/board/${board.id}`}
+          class="block p-4 border rounded-lg shadow-md hover:bg-gray-100 hover:shadow-lg transition-all"
+        >
+          <h2 class="text-xl font-semibold">{board.name}</h2>
+          <p class="text-sm text-gray-600">{board.columns.length} columnas</p>
+        </a>
+      ))}
+    </div>
+  </main>
+</Layout>
