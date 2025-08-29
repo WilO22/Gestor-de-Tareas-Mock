@@ -30,14 +30,10 @@ const { workspaceId, boardId } = Astro.params;
 
 const currentWorkspace = allWorkspaces.find(ws => ws.id === workspaceId);
 
-// --- NUEVA COMPROBACIÓN AÑADIDA AQUÍ ---
-// Si el workspace no se encuentra, no podemos continuar.
 if (!currentWorkspace) {
   return Astro.redirect('/404');
 }
-// ----------------------------------------
 
-// Ahora TypeScript sabe que si el código llega aquí, 'currentWorkspace' SÍ existe.
 const currentBoard = currentWorkspace.boards.find(b => b.id === boardId);
 
 if (!currentBoard) {
@@ -50,19 +46,21 @@ if (!currentBoard) {
     <div class="mb-6">
       <a href="/dashboard" class="text-blue-500 hover:underline">Espacios de Trabajo</a>
       <span>/</span>
-      <a href={`/workspace/${workspaceId}`} class="text-blue-500 hover:underline">{currentWorkspace.name}</a>
+      <a href={`/workspace/${workspaceId}/boards`} class="text-blue-500 hover:underline">{currentWorkspace.name}</a>
     </div>
 
     <h1 class="text-3xl font-bold mb-6">{currentBoard.name}</h1>
 
     <div class="flex gap-4 overflow-x-auto pb-4">
       {currentBoard.columns.map(column => (
-        <div class="bg-gray-100 p-3 rounded-lg w-72 flex-shrink-0">
+        // El data-id ya NO está aquí
+        <div class="bg-gray-100 p-3 rounded-lg w-72 flex-shrink-0 flex flex-col">
           <h2 class="font-bold mb-3">{column.name}</h2>
           
-          <div class="space-y-2">
+          {/* El data-id AHORA está aquí, en el elemento .task-list */}
+          <div class="space-y-2 task-list flex-grow" data-id={column.id}>
             {column.tasks.map(task => (
-              <div class="bg-white p-2 rounded-md shadow">
+              <div class="bg-white p-2 rounded-md shadow" data-id={task.id}>
                 <p>{task.title}</p>
               </div>
             ))}
@@ -71,4 +69,36 @@ if (!currentBoard) {
       ))}
     </div>
   </main>
+  
+  <script src="../../../../scripts/drag-and-drop.ts"></script>
+
+  <style>
+    .blue-background-class {
+      background-color: rgba(59, 130, 246, 0.2);
+      border-radius: 6px;
+      border: 1px dashed rgba(59, 130, 246, 0.5);
+      opacity: 0.3;
+    }
+    
+    /* 1. Ponemos la "mano abierta" ✋ por defecto en todas las tarjetas */
+  .task-list > div {
+    cursor: grab; /* Esto indica que el elemento es "agarrable" */
+    user-select: none;
+    -webkit-user-select: none;
+  }
+
+  /* 2. Forzamos la "mano cerrada" ✊ en el clon que arrastramos */
+  .sortable-fallback {
+    opacity: 0.7;
+    transform: rotate(3deg);
+    box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.2);
+    cursor: grabbing !important; /* Le damos MÁXIMA prioridad */
+  }
+
+  /* 3. Forzamos la "mano cerrada" ✊ también en el elemento original mientras se arrastra */
+  .sortable-chosen {
+    cursor: grabbing !important; /* Le damos MÁXIMA prioridad */
+  }
+
+  </style>
 </Layout>
